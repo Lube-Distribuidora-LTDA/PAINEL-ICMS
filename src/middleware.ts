@@ -1,7 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { AUTH_DESLIGADA_TEMPORARIAMENTE } from "@/lib/auth-config";
 
 export async function middleware(request: NextRequest) {
+  if (AUTH_DESLIGADA_TEMPORARIAMENTE) {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
