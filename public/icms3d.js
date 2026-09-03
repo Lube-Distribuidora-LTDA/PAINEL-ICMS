@@ -4,10 +4,10 @@
   const EMPTY = { axis: '', cats: [], ent: [], sai: [] };
 
   const MONO = 'var(--font-jetbrains-mono),ui-monospace,Menlo,monospace';
-  const fmt = n => n >= 1e6 ? (n / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' mi'
+  const fmt = n => 'R$ ' + (n >= 1e6 ? (n / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' mi'
     : n >= 1e4 ? (n / 1e3).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + ' mil'
       : n >= 1e3 ? (n / 1e3).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' mil'
-        : n.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+        : n.toLocaleString('pt-BR', { maximumFractionDigits: 0 }));
 
   const SKIN = {
     ent: { front: 'linear-gradient(180deg,#4a5cf2,#1b2596)', side: 'linear-gradient(180deg,#2b3ad6,#101867)', top: 'linear-gradient(160deg,#8f9dff,#4a5cf2)', glow: 'rgba(58,76,236,.55)', txt: '#aab6ff' },
