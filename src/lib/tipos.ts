@@ -26,6 +26,12 @@ export interface Grafico {
   cats: string[];
   aliq_valor: { ent: number[]; sai: number[] };
   aliq_icms: { ent: number[]; sai: number[] };
+  // Opcionais: só existem em períodos gerados depois do filtro "com/sem
+  // redução de base" — um período antigo, ainda não reprocessado, não tem.
+  aliq_valor_com_reducao?: { ent: number[]; sai: number[] };
+  aliq_valor_sem_reducao?: { ent: number[]; sai: number[] };
+  aliq_icms_com_reducao?: { ent: number[]; sai: number[] };
+  aliq_icms_sem_reducao?: { ent: number[]; sai: number[] };
   uf: {
     ent: { cats: string[]; valores: number[] };
     sai: { cats: string[]; valores: number[] };

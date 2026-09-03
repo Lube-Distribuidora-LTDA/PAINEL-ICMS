@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { brl, mi, pct } from "@/lib/formato";
-import { montarDatasets } from "@/lib/montarDatasets";
+import { montarDatasets, type FiltroReducao } from "@/lib/montarDatasets";
 import Chart3D from "@/components/Chart3D";
 import type { Periodo } from "@/lib/tipos";
 import type { User } from "@supabase/supabase-js";
@@ -32,6 +32,9 @@ const ON: React.CSSProperties = {
 const OFF: React.CSSProperties = {
   ...BTN, border: "1px solid rgba(130,148,255,.28)", background: "rgba(255,255,255,.04)", color: "#98a3dc",
 };
+const OFF_DESABILITADO: React.CSSProperties = {
+  ...OFF, opacity: 0.35, cursor: "not-allowed",
+};
 
 export default function Dashboard({ user }: { user: User }) {
   const supabase = createClient();
@@ -45,6 +48,7 @@ export default function Dashboard({ user }: { user: User }) {
   const [atualizando, setAtualizando] = useState(false);
   const [modo, setModo] = useState<"aliq" | "icms" | "uf" | "base">("aliq");
   const [serie, setSerie] = useState<"both" | "ent" | "sai">("both");
+  const [reducao, setReducao] = useState<FiltroReducao>("todos");
   const [exportando, setExportando] = useState(false);
 
   const carregarMaisRecente = useCallback(async () => {
@@ -144,7 +148,9 @@ export default function Dashboard({ user }: { user: User }) {
   const k = d?.kpis;
   const t = d?.totais;
   const ins = d?.insights;
-  const datasets = d ? montarDatasets(d) : null;
+  const datasets = d ? montarDatasets(d, reducao) : null;
+  const temFiltroReducao = !!d?.grafico.aliq_valor_com_reducao;
+  const filtroReducaoRelevante = modo === "aliq" || modo === "icms";
 
   const pesoEnt = k && t ? pct((t.ent_icms / (t.ent_icms + t.sai_icms || 1)) * 100, 0) : "0%";
   const pesoSai = k && t ? pct((t.sai_icms / (t.ent_icms + t.sai_icms || 1)) * 100, 0) : "0%";
@@ -219,6 +225,34 @@ export default function Dashboard({ user }: { user: User }) {
                       <button style={serie === "ent" ? ON : OFF} onClick={() => setSerie("ent")}>Entrada</button>
                       <button style={serie === "sai" ? ON : OFF} onClick={() => setSerie("sai")}>Saída</button>
                     </div>
+                    {filtroReducaoRelevante && (
+                      <>
+                        <div style={{ width: 1, height: 22, background: "rgba(130,148,255,.25)" }} />
+                        <div style={{ display: "flex", gap: 6 }} title={temFiltroReducao ? undefined : "Disponível depois da próxima vez que clicar em Atualizar"}>
+                          <button
+                            style={!temFiltroReducao ? OFF_DESABILITADO : reducao === "todos" ? ON : OFF}
+                            disabled={!temFiltroReducao}
+                            onClick={() => setReducao("todos")}
+                          >
+                            Todas
+                          </button>
+                          <button
+                            style={!temFiltroReducao ? OFF_DESABILITADO : reducao === "com" ? ON : OFF}
+                            disabled={!temFiltroReducao}
+                            onClick={() => setReducao("com")}
+                          >
+                            Com Redução · ICMS
+                          </button>
+                          <button
+                            style={!temFiltroReducao ? OFF_DESABILITADO : reducao === "sem" ? ON : OFF}
+                            disabled={!temFiltroReducao}
+                            onClick={() => setReducao("sem")}
+                          >
+                            Sem Redução · ICMS
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div style={{ position: "relative", minHeight: 0 }}>
