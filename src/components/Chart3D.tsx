@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 
 export interface ConjuntoDados {
@@ -28,34 +28,38 @@ export default function Chart3D({
   series: string;
 }) {
   const ref = useRef<Icms3DElement | null>(null);
-  const carregado = useRef(false);
+  // Só mexe nas propriedades do <icms-3d> depois que a classe REALMENTE
+  // registrou (customElements.whenDefined) — setar antes disso grava uma
+  // propriedade "solta" na instância que o "upgrade" do Custom Element
+  // depois ignora, e o gráfico fica em branco até algo forçar um novo
+  // render (por isso só aparecia depois de clicar Atualizar).
+  const [pronto, setPronto] = useState(false);
 
   useEffect(() => {
-    if (ref.current) ref.current.datasets = datasets;
-  }, [datasets]);
+    let cancelado = false;
+    customElements.whenDefined("icms-3d").then(() => {
+      if (!cancelado) setPronto(true);
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   useEffect(() => {
-    if (ref.current) ref.current.mode = mode;
-  }, [mode]);
+    if (pronto && ref.current) ref.current.datasets = datasets;
+  }, [datasets, pronto]);
 
   useEffect(() => {
-    if (ref.current) ref.current.series = series;
-  }, [series]);
+    if (pronto && ref.current) ref.current.mode = mode;
+  }, [mode, pronto]);
+
+  useEffect(() => {
+    if (pronto && ref.current) ref.current.series = series;
+  }, [series, pronto]);
 
   return (
     <>
-      <Script
-        src="/icms3d.js"
-        strategy="afterInteractive"
-        onReady={() => {
-          carregado.current = true;
-          if (ref.current) {
-            ref.current.datasets = datasets;
-            ref.current.mode = mode;
-            ref.current.series = series;
-          }
-        }}
-      />
+      <Script src="/icms3d.js" strategy="afterInteractive" />
       {/* @ts-expect-error web component sem tipagem própria */}
       <icms-3d ref={ref} style={{ position: "absolute", inset: 0 }} />
     </>

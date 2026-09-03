@@ -49,6 +49,7 @@ export interface Periodo {
   atualizado_em: string;
   status: "ok" | "erro";
   erro_msg: string | null;
+  planilha_path: string | null;
 }
 
 export interface Pedido {

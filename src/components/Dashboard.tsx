@@ -45,6 +45,7 @@ export default function Dashboard({ user }: { user: User }) {
   const [atualizando, setAtualizando] = useState(false);
   const [modo, setModo] = useState<"aliq" | "icms" | "uf" | "base">("aliq");
   const [serie, setSerie] = useState<"both" | "ent" | "sai">("both");
+  const [exportando, setExportando] = useState(false);
 
   const carregarMaisRecente = useCallback(async () => {
     setCarregandoPeriodo(true);
@@ -114,6 +115,25 @@ export default function Dashboard({ user }: { user: User }) {
   async function sair() {
     await supabase.auth.signOut();
     window.location.href = "/login";
+  }
+
+  async function exportarPlanilha() {
+    if (!periodo?.planilha_path) {
+      setErroStatus(true);
+      setStatus("Ainda não tem planilha gerada para este período.");
+      return;
+    }
+    setExportando(true);
+    const { data, error } = await supabase.storage
+      .from("planilhas")
+      .createSignedUrl(periodo.planilha_path, 60);
+    setExportando(false);
+    if (error || !data) {
+      setErroStatus(true);
+      setStatus("Não consegui gerar o link da planilha: " + (error?.message ?? "erro desconhecido"));
+      return;
+    }
+    window.open(data.signedUrl, "_blank");
   }
 
   if (carregandoPeriodo) {
@@ -329,6 +349,9 @@ export default function Dashboard({ user }: { user: User }) {
         <input type="date" value={fim} onChange={(e) => setFim(e.target.value)} style={{ borderRadius: 6, border: "1px solid rgba(130,148,255,.3)", background: "rgba(255,255,255,.06)", color: "#e9ecfb", padding: "6px 9px", font: "inherit" }} />
         <button onClick={atualizar} disabled={atualizando} style={{ borderRadius: 7, border: "1px solid rgba(255,255,255,.35)", background: "linear-gradient(180deg,#3546e0,#1a2493)", color: "#fff", padding: "7px 18px", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", font: "inherit", cursor: "pointer", opacity: atualizando ? 0.55 : 1 }}>
           {atualizando ? "Atualizando..." : "Atualizar"}
+        </button>
+        <button onClick={exportarPlanilha} disabled={exportando || !periodo?.planilha_path} style={{ borderRadius: 7, border: "1px solid rgba(140,155,255,.4)", background: "rgba(255,255,255,.06)", color: "#e9ecfb", padding: "7px 18px", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", font: "inherit", cursor: "pointer", opacity: exportando || !periodo?.planilha_path ? 0.55 : 1 }}>
+          {exportando ? "Gerando link..." : "Exportar planilha"}
         </button>
         {status && <span style={{ color: erroStatus ? "#ff8f96" : "#aab6ff" }}>{status}</span>}
         <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, color: "#6b77b4" }}>
