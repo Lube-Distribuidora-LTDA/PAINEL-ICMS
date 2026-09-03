@@ -50,6 +50,15 @@ export async function POST(request: Request) {
     const dados = await resp.json();
 
     if (!resp.ok) {
+      if (resp.status === 429) {
+        return NextResponse.json(
+          {
+            erro:
+              "A cota gratuita da IA (Google Gemini) foi atingida no momento. Aguarde alguns minutos e tente de novo. Se continuar acontecendo, é preciso checar o plano/limite da chave em ai.dev/rate-limits.",
+          },
+          { status: 429 }
+        );
+      }
       const msg = dados?.error?.message || "Erro desconhecido do Gemini.";
       return NextResponse.json({ erro: msg }, { status: resp.status });
     }

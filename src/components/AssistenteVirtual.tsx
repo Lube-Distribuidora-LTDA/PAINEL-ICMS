@@ -16,11 +16,20 @@ const SAUDACAO: Mensagem = {
 
 export default function AssistenteVirtual() {
   const [aberto, setAberto] = useState(false);
+  const [fechando, setFechando] = useState(false);
   const [mensagens, setMensagens] = useState<Mensagem[]>([SAUDACAO]);
   const [entrada, setEntrada] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [grande, setGrande] = useState(false);
   const fimRef = useRef<HTMLDivElement | null>(null);
+
+  function fecharComAnimacao() {
+    setFechando(true);
+    setTimeout(() => {
+      setAberto(false);
+      setFechando(false);
+    }, 240);
+  }
 
   useEffect(() => {
     fimRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -72,7 +81,31 @@ export default function AssistenteVirtual() {
           50% { box-shadow: 0 10px 34px rgba(43,58,214,.75), 0 0 0 8px rgba(255,255,255,0); }
         }
         .bolha-assistente { animation: respirar 3.2s ease-in-out infinite, brilhar 3.2s ease-in-out infinite; }
-        .janela-assistente { transition: height .35s cubic-bezier(.2,.8,.2,1), width .35s cubic-bezier(.2,.8,.2,1); }
+        .bolha-assistente:active { transform: scale(.92); }
+        @keyframes abrirJanela {
+          from { opacity: 0; transform: scale(.82) translateY(18px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes fecharJanela {
+          from { opacity: 1; transform: scale(1) translateY(0); }
+          to { opacity: 0; transform: scale(.82) translateY(18px); }
+        }
+        @keyframes surgirMensagem {
+          from { opacity: 0; transform: translateY(8px) scale(.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes pulsarPonto {
+          0%, 60%, 100% { opacity: .3; transform: translateY(0); }
+          30% { opacity: 1; transform: translateY(-3px); }
+        }
+        .janela-assistente {
+          transition: height .35s cubic-bezier(.2,.8,.2,1), width .35s cubic-bezier(.2,.8,.2,1);
+          transform-origin: bottom right;
+        }
+        .janela-assistente.abrindo { animation: abrirJanela .32s cubic-bezier(.2,.8,.2,1) both; }
+        .janela-assistente.fechando { animation: fecharJanela .24s cubic-bezier(.4,0,1,1) both; }
+        .msg-linha { animation: surgirMensagem .28s cubic-bezier(.2,.8,.2,1) both; }
+        .ponto-digitando { display: inline-block; width: 6px; height: 6px; margin: 0 2px; border-radius: 50%; background: #8f9dff; animation: pulsarPonto 1.1s ease-in-out infinite; }
         .msg-assistente p { margin: 0 0 8px; }
         .msg-assistente p:last-child { margin-bottom: 0; }
         .msg-assistente strong { color: #fff; }
@@ -100,9 +133,9 @@ export default function AssistenteVirtual() {
         </button>
       )}
 
-      {aberto && (
+      {(aberto || fechando) && (
         <div
-          className="janela-assistente"
+          className={`janela-assistente ${fechando ? "fechando" : "abrindo"}`}
           style={{
             position: "fixed", right: 22, bottom: 22, zIndex: 100,
             width: grande ? 440 : 360, height: grande ? 560 : 440,
@@ -122,12 +155,12 @@ export default function AssistenteVirtual() {
               <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>Assistente do Painel</div>
               <div style={{ fontSize: 10, color: "#7d8ad0", letterSpacing: ".06em" }}>ICMS · LUBE DISTRIBUIDORA</div>
             </div>
-            <button onClick={() => setAberto(false)} style={{ background: "none", border: "none", color: "#7d8ad0", fontSize: 18, cursor: "pointer", padding: 4 }}>✕</button>
+            <button onClick={fecharComAnimacao} style={{ background: "none", border: "none", color: "#7d8ad0", fontSize: 18, cursor: "pointer", padding: 4 }}>✕</button>
           </div>
 
           <div style={{ flex: 1, overflowY: "auto", padding: "14px", display: "flex", flexDirection: "column", gap: 10 }}>
             {mensagens.map((m, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: m.papel === "user" ? "flex-end" : "flex-start" }}>
+              <div key={i} className="msg-linha" style={{ display: "flex", justifyContent: m.papel === "user" ? "flex-end" : "flex-start" }}>
                 <div
                   className={m.papel === "model" ? "msg-assistente" : undefined}
                   style={{
@@ -145,7 +178,13 @@ export default function AssistenteVirtual() {
               </div>
             ))}
             {carregando && (
-              <div style={{ fontSize: 12, color: "#7d8ad0" }}>Pensando...</div>
+              <div className="msg-linha" style={{ display: "flex", justifyContent: "flex-start" }}>
+                <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,.06)", border: "1px solid rgba(130,148,255,.18)" }}>
+                  <span className="ponto-digitando" style={{ animationDelay: "0s" }} />
+                  <span className="ponto-digitando" style={{ animationDelay: ".15s" }} />
+                  <span className="ponto-digitando" style={{ animationDelay: ".3s" }} />
+                </div>
+              </div>
             )}
             <div ref={fimRef} />
           </div>
