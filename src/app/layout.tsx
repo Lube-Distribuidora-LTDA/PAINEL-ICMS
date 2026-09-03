@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import AssistenteVirtualGate from "@/components/AssistenteVirtualGate";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -26,7 +27,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="pt-BR"
       className={`${archivo.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#050818]">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#050818]">
+        {children}
+        <AssistenteVirtualGate />
+      </body>
     </html>
   );
 }
