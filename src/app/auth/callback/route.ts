@@ -7,7 +7,20 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { data } = await supabase.auth.exchangeCodeForSession(code);
+    const email = data.user?.email;
+
+    if (email) {
+      const { data: perfil } = await supabase
+        .from("usuarios_permitidos")
+        .select("senha_definida")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (!perfil?.senha_definida) {
+        return NextResponse.redirect(`${origin}/definir-senha`);
+      }
+    }
   }
 
   return NextResponse.redirect(`${origin}/`);
